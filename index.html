@@ -7,39 +7,43 @@
 <meta name="description" content="Unofficial planner for a Notre Dame home football weekend: record, countdown, and an hour-by-hour itinerary.">
 <!-- Data lives at the top of the <script> at the end of <body>: SEASON, ITINERARY, CHANGELOG. -->
 <style>
+/* Default palette is Irish green. --navy is the primary color and --gold the accent;
+   the names are kept from the original navy-and-gold palette. */
 :root {
-  --navy: #0C2340;
-  --navy-2: #1b3558;
-  --gold: #C99700;
-  --gold-soft: #faf4e2;
+  --navy: #006B31;
+  --navy-2: #00522a;
+  --gold: #00843D;
+  --gold-soft: #e8f5ec;
   --ink: #16202e;
   --muted: #4d5767;
   --line: #dfe3ea;
   --bg: #ffffff;
   --panel: #f6f7f9;
-  --warn-bg: #fff7e3;
-  --focus: #1a5fb4;
+  --warn-bg: #eef8f1;
+  --focus: #00522a;
   --radius: 10px;
   --gap: 1rem;
   --on-navy: #ffffff;
-  --on-navy-muted: #d6dce6;
+  --on-navy-muted: #dff3e6;
   --on-navy-panel: rgba(255,255,255,.07);
   --control-border: #9aa3b2;
   --surface: #ffffff;
   --print-ink: #000000;
 }
-/* Green theme: set by setTheme(), replaces navy and gold */
-:root[data-theme="green"] {
-  --navy: #006B31;
-  --navy-2: #00522a;
-  --gold: #00843D;
-  --gold-soft: #e8f5ec;
-  --warn-bg: #eef8f1;
-  --focus: #00522a;
-  --on-navy-muted: #dff3e6;
+/* Navy and gold theme: set by setTheme() */
+:root[data-theme="navy"] {
+  --navy: #0C2340;
+  --navy-2: #1b3558;
+  --gold: #C99700;
+  --gold-soft: #faf4e2;
+  --warn-bg: #fff7e3;
+  --focus: #1a5fb4;
+  --on-navy-muted: #d6dce6;
 }
-:root[data-theme="green"] .site-head .eyebrow { color: var(--on-navy-muted); }
-:root[data-theme="green"] .site-head :focus-visible { outline-color: var(--on-navy); }
+.site-head .eyebrow { color: var(--on-navy-muted); }
+.site-head :focus-visible { outline-color: var(--on-navy); }
+:root[data-theme="navy"] .site-head .eyebrow { color: var(--gold); }
+:root[data-theme="navy"] .site-head :focus-visible { outline-color: var(--focus); }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
@@ -59,7 +63,6 @@ h1, h2, h3 { line-height: 1.2; margin: 0; }
 .site-head { background: var(--navy); color: var(--on-navy); border-bottom: 4px solid var(--gold); }
 .site-head .wrap { padding-top: 1.5rem; padding-bottom: 1.5rem; }
 .eyebrow { font-size: .8rem; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 .35rem; color: var(--muted); }
-.site-head .eyebrow { color: var(--gold); }
 .site-head h1 { font-size: 1.6rem; }
 .head-stats { display: grid; gap: .75rem; margin-top: 1.1rem; }
 .stat { background: var(--on-navy-panel); border-radius: var(--radius); padding: .75rem .9rem; }
@@ -193,8 +196,8 @@ footer p { margin: 0; }
         <div class="field full">
           <fieldset>
             <legend>Color theme</legend>
+            <label class="radio-row" for="theme-green"><input type="radio" name="theme" value="green" id="theme-green"><span>Irish green</span></label>
             <label class="radio-row" for="theme-navy"><input type="radio" name="theme" value="navy" id="theme-navy"><span>Navy and gold</span></label>
-            <label class="radio-row" for="theme-green"><input type="radio" name="theme" value="green" id="theme-green"><span>Green</span></label>
           </fieldset>
         </div>
         <div class="field full">
@@ -472,14 +475,15 @@ function initState() {
   const storedArrival = load("arrival");
   if (ITINERARY.arrivals.some((a) => a.id === storedArrival)) state.arrival = storedArrival;
 }
-// Color theme: "green" swaps the navy and gold palette for green; anything else is the default.
-function setTheme(theme) {
-  const green = theme === "green";
-  if (green) document.documentElement.setAttribute("data-theme", "green");
+// Color theme: "navy" switches to navy and gold; anything else is the default Irish green.
+// Stored under "palette": the earlier "theme" key saved "navy" on every visit, so it is ignored.
+function setTheme(theme, remember) {
+  const navy = theme === "navy";
+  if (navy) document.documentElement.setAttribute("data-theme", "navy");
   else document.documentElement.removeAttribute("data-theme");
-  $("theme-green").checked = green;
-  $("theme-navy").checked = !green;
-  save("theme", green ? "green" : "navy");
+  $("theme-green").checked = !navy;
+  $("theme-navy").checked = navy;
+  if (remember) save("palette", navy ? "navy" : "green");
 }
 function selectedGame() {
   return upcomingHomeGames().find((g) => g.date === state.gameDate) || null;
@@ -678,7 +682,7 @@ function renderChangelog() {
 }
 
 initState();
-setTheme(load("theme"));
+setTheme(load("palette"));
 renderHeader();
 renderControls();
 renderPlan();
@@ -692,7 +696,7 @@ $("game").addEventListener("change", (e) => {
   renderPlan();
 });
 document.querySelectorAll('input[name="theme"]').forEach((input) => {
-  input.addEventListener("change", (e) => setTheme(e.target.value));
+  input.addEventListener("change", (e) => setTheme(e.target.value, true));
 });
 $("print").addEventListener("click", () => window.print());
 setInterval(renderHeader, 30000);
