@@ -28,6 +28,18 @@
   --surface: #ffffff;
   --print-ink: #000000;
 }
+/* Green theme: set by setTheme(), replaces navy and gold */
+:root[data-theme="green"] {
+  --navy: #006B31;
+  --navy-2: #00522a;
+  --gold: #00843D;
+  --gold-soft: #e8f5ec;
+  --warn-bg: #eef8f1;
+  --focus: #00522a;
+  --on-navy-muted: #dff3e6;
+}
+:root[data-theme="green"] .site-head .eyebrow { color: var(--on-navy-muted); }
+:root[data-theme="green"] .site-head :focus-visible { outline-color: var(--on-navy); }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body {
@@ -176,6 +188,13 @@ footer p { margin: 0; }
           <fieldset>
             <legend>When do you arrive?</legend>
             <div id="arrival"></div>
+          </fieldset>
+        </div>
+        <div class="field full">
+          <fieldset>
+            <legend>Color theme</legend>
+            <label class="radio-row" for="theme-navy"><input type="radio" name="theme" value="navy" id="theme-navy"><span>Navy and gold</span></label>
+            <label class="radio-row" for="theme-green"><input type="radio" name="theme" value="green" id="theme-green"><span>Green</span></label>
           </fieldset>
         </div>
         <div class="field full">
@@ -453,6 +472,15 @@ function initState() {
   const storedArrival = load("arrival");
   if (ITINERARY.arrivals.some((a) => a.id === storedArrival)) state.arrival = storedArrival;
 }
+// Color theme: "green" swaps the navy and gold palette for green; anything else is the default.
+function setTheme(theme) {
+  const green = theme === "green";
+  if (green) document.documentElement.setAttribute("data-theme", "green");
+  else document.documentElement.removeAttribute("data-theme");
+  $("theme-green").checked = green;
+  $("theme-navy").checked = !green;
+  save("theme", green ? "green" : "navy");
+}
 function selectedGame() {
   return upcomingHomeGames().find((g) => g.date === state.gameDate) || null;
 }
@@ -650,6 +678,7 @@ function renderChangelog() {
 }
 
 initState();
+setTheme(load("theme"));
 renderHeader();
 renderControls();
 renderPlan();
@@ -661,6 +690,9 @@ $("game").addEventListener("change", (e) => {
   state.gameDate = e.target.value;
   save("game", state.gameDate);
   renderPlan();
+});
+document.querySelectorAll('input[name="theme"]').forEach((input) => {
+  input.addEventListener("change", (e) => setTheme(e.target.value));
 });
 $("print").addEventListener("click", () => window.print());
 setInterval(renderHeader, 30000);
